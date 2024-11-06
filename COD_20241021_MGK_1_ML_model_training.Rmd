@@ -57,13 +57,14 @@ path_library <-
                "/Library/Frameworks/R.framework/Resources/library/")
 
 
-str_libraries <- c("readxl", "phyloseq", "tidyverse", "pacman", "yaml",
+str_libraries <- c("dplyr", "tidymodels","Biostrings", "GenomicRanges",
+                   "readxl", "phyloseq", "tidyverse", "pacman", "yaml",
                    "keras", "tensorflow",
                    "ggplot2", "vegan", "microbiome","ggpubr", "viridis",
                    "decontam", "gridExtra", "ggpubr", "lme4", "lmerTest",
                    "writexl", "harrietr", "Maaslin2", "ggtext", "mgcv",
                    "ggpmisc", "janitor", "breakaway", "decontam",
-                   "reactablefmtr", "DT", "htmltools", "bugphyzz")
+                   "reactablefmtr", "DT", "htmltools")
         
 YAML_header <-
 '---
@@ -122,13 +123,23 @@ FUN.LineZero.Report()
 
 ```
 
+# Downloading Ori database
+
+```{r, warning=FALSE}
+```
+
 # Loading data
 
 ```{r warning=FALSE}
 
+# Load basic information
+basic_info <- read.csv("Sequencing_archive/2024_10_20_OriDB/DeOri_dataset_20241020/basic_info.csv")
+
+
+head(basic_info)
+
 
 ```
-
 
 # DL model training
 
@@ -184,6 +195,30 @@ cat('Train accuracy:', score$accuracy)
 
 ```
 
+
+# Contrastive learning
+
+Employed for predicting enzyme funcitons, by Yu et al., 2023. Science. https://www.science.org/doi/full/10.1126/science.adf2465
+
+```{r}
+library(keras)
+
+contrastive_loss <- function(y_true, y_pred) {
+  margin <- 1  # Adjust margin as needed
+  loss <- y_true * k_square(y_pred) +
+    (1 - y_true) * k_square(k_maximum(0, margin - y_pred))
+  return(loss)
+}
+
+# Define your neural network model here and compile with contrastive_loss
+model <- keras_model_sequential() %>%
+  layer_dense(units = 128, activation = "relu", input_shape = c(input_dim)) %>%
+  layer_dense(units = 64, activation = "relu") %>%
+  layer_dense(units = 32)  # Output embedding layer
+
+model %>% compile(optimizer = "adam", loss = contrastive_loss)
+
+```
 
 ```{r warning=FALSE }
 #===============================================================================
